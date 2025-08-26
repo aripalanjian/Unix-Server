@@ -1,0 +1,34 @@
+<HTML>
+<HEAD><TITLE>TEST TEXT</TITLE><link rel="icon" href="data:,"></HEAD>
+<BODY BGCOLOR="#99cc99" TEXT="#000000" LINK="#2020ff" VLINK="#4040cc">
+
+
+<P>
+TEST....
+<P>
+
+<H3> The server has successully started and is sending you this page. </H3>
+
+<P>
+IMAGE LINK: If the server can successfully find and send you the image, it will show up in the subsequent page. <A HREF="testPresence.html">Click on this link for an image. </A>. 
+
+<P>
+NONEXISTANT LINK <A HREF="fake.html">click here to test the non-existent link </A>.
+
+<P>
+<form action="/clientMessage" method="post">
+    <label for="client-message">Client Message: </label>
+    <input type="text" id="client-message" name="client-message" placeholder="Message to Server"/>
+    <button type="submit">Submit</button>
+</form>
+
+<P>
+<form action="" method="post">
+    <button name="quit" value="exit">Close Client</button>
+</form>
+<form action="" method="post">
+    <button name="quit-server" value="exit">Close Server</button>
+</form>
+
+</BODY>
+</HTML>

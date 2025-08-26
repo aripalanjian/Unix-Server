@@ -1,0 +1,13 @@
+*.exe
+*.gdoc
+*.pdf
+/OldCode
+/.vscode
+errReport.txt
+clientErrReport.txt
+*.o
+server
+client
+/messages
+/wait.dSYM
+wait
