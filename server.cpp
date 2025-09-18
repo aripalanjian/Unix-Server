@@ -32,7 +32,8 @@ std::string getOsName()
     #endif
 }  
 
-Server::Server(bool debug, std::string portno):debug{debug}, portno{portno}{
+Server::Server(bool debug, std::string portno): debug{debug}, portno{portno}
+{
     running = false;
     serverSocket = INVALID_SOCKET;
     
@@ -43,8 +44,10 @@ Server::Server(bool debug, std::string portno):debug{debug}, portno{portno}{
     address.sin_port = htons(std::stoi(DEFAULT_PORT));
 }
 
-Server::~Server() {
-    for (auto& thread : tpool) {
+Server::~Server()
+{
+    for (auto& thread : tpool) 
+    {
         thread.join();
     }
 
@@ -63,20 +66,23 @@ void Server::run() {
     
     methodResult = bind(serverSocket, reinterpret_cast<struct sockaddr *>(&address), sizeof(address));
 
-    if (methodResult == 0) {
+    if (methodResult == 0) 
+    {
         std::cout << "Binding to port " << DEFAULT_PORT << "...\n";
         int cnt = 0;
 
         methodResult = listen(serverSocket, 5);
-        if (methodResult == 0){
-            while (running) {
+        if (methodResult == 0)
+        {
+            while (running)
+            {
                 std::string waiting = "Waiting for connections...\n";
                 std::cout << waiting;// << std::string(cnt,'.') << std::string(3-cnt, ' ') << std::flush;
 
                 const SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
                 if (clientSocket != INVALID_SOCKET) {
                     std::cout << "\n**Server** Connection established... Using Socket: " << clientSocket << "\n";
-                    serverThread(clientSocket);
+                    clientThread(clientSocket);
                     // threads.emplace_back(serverThread, clientSocket);
                 }
             //     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -91,7 +97,7 @@ void Server::run() {
     }
 }
 
-void Server::serverThread(const SOCKET& socket) {
+void Server::clientThread(const SOCKET& socket) {
     bool connected = true;
     int methodResult;
 
@@ -110,8 +116,11 @@ void Server::serverThread(const SOCKET& socket) {
         std::vector<std::string> request;
         std::vector<std::string> header;
         std::string response;
-    
+        #ifdef _WIN32
         methodResult = recv(socket, buffer.data(), buffer.size(), 0);
+        #elif __APPLE__ || __MACH__
+        methodResult = recv(socket, (void*)buffer.data(), buffer.size(), 0);
+        #endif
         if (methodResult == -1) {
             const auto duration = now.tv_sec - start.tv_sec; // Time since last recv() call with data
             clock_gettime(CLOCK_REALTIME, &now);

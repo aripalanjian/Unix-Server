@@ -1,4 +1,7 @@
 #include "server.hpp"
+#include "messages/clitext.hpp"
+
+using toolsAPUSC::nl;
 
 std::string getOsName()
 {
@@ -21,14 +24,50 @@ std::string getOsName()
     #endif
 }
 
-Server::Server(bool debug, std::string portno):debug{debug}, portno{portno}{
+const std::string statusFactory(const int& status)
+{
+  switch(status)
+  {
+    case 200:
+      return " 200 OK";
+    case 404:
+      return " 404 Not Found";
+    default:
+      return " 501 Not Implemented";
+  }
+}
+
+Server::Server():debug(true), portno(DEFAULT_PORT), running(false)
+{
     initServer();
+}
+
+Server::Server(bool debug, std::string portno):debug(debug), portno(portno), running(false)
+{
+    initServer();
+}
+
+Server::~Server()
+{
+    for (auto& thread : tpool) 
+    {
+        thread.join();
+    }
+    userInterface.join();
+
+    close(serverSocket);
 }
 
 void Server::initServer()
 {
-    serverLog = Log{};
-    logging = std::thread{loggingThread, std::ref(serverLog)};
+    //Initialize Log
+    serverLog = (debug) ? Log{debug} : Log{};
+
+    //initialize ui thread
+    userInterface = std::thread{uiThread};
+    serverLog.addEvent({Code::START, "New Log Created:"});
+    serverLog.addEvent({Code::INIT, "Server Initializing"});
+
     running = false;
     serverSocket = INVALID_SOCKET;
     
@@ -36,50 +75,77 @@ void Server::initServer()
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(std::stoi(DEFAULT_PORT));
+    address.sin_port = htons(std::stoi(portno));
+}
+
+void Server::welcomeMsg(){
+    std::cout << "Starting server..." << getOsName() << nl;
+
+    std::cout << "Running on: ";
+    int getHost = gethostname(hostname, sizeof(hostname));
+    if (getHost == 0){
+        std::cout << hostname << nl;
+    } else {
+        std::cout << "Unkown Host Name\n";
+    }
 }
 
 void Server::run()
 {
-    std::cout << "Starting server...\nOS: " << getOsName() << "\n";
     running = true;
-
-    int methodResult;
-    methodResult = gethostname(hostname, sizeof(hostname));
-    if (methodResult == 0){
-        std::cout << "Host: " << hostname << "\n";
-    }    
     
-    methodResult = bind(serverSocket, reinterpret_cast<struct sockaddr *>(&address), sizeof(address));
+    int bindSocket = bind(serverSocket, reinterpret_cast<struct sockaddr *>(&address), sizeof(address));
 
-    if (methodResult == 0) {
-        std::cout << "Binding to port " << DEFAULT_PORT << "...\n";
+    if (bindSocket == 0)
+    {
+        serverLog.addEvent({Code::INIT, "Binding to port " + DEFAULT_PORT, true});
 
-        methodResult = listen(serverSocket, 5);
-        if (methodResult == 0){
+        int listenSocket = listen(serverSocket, 5);
+        if (listenSocket == 0)
+        {
             int cnt = 0;
-            while (running) {
-                std::string waiting = "Waiting for connections...\n";
-                std::cout << waiting;// << std::string(cnt,'.') << std::string(3-cnt, ' ') << std::flush;
+            while (running)
+            {
 
-                const SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
-                if (clientSocket != INVALID_SOCKET) {
-                    std::cout << "\n**Server** Connection established... Using Socket: " << clientSocket << "\n";
-                    tpool.emplace_back(std::thread{serverThread, std::ref(serverLog), clientSocket});
+                int clientSocket = accept(serverSocket, nullptr, nullptr);
+                if (clientSocket != INVALID_SOCKET)
+                {
+                    serverLog.addEvent({Code::SERVERMSG, "Connection established... Using Socket: " + clientSocket, true});
+                    tpool.emplace_back(std::thread{clientThread, std::ref(serverLog), clientSocket});
                 }
-            //     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            //     std::cout << "\r" << std::string(waiting.length() + cnt, ' ') << "\r";
-            //     cnt = (cnt == 3) ? 0 : cnt + 1;
             }
         } else {
             std::cerr << errno << ": Error while listening.\n";
         }
     } else {
-        std::cerr << "**Server** Error: Failed to bind to port." << std::endl;
+        std::cerr << "[Server] Error: Failed to bind to port." << nl;
     }
 }
 
-void Server::serverThread(const SOCKET& socket)
+void Server::uiThread()
+{
+    welcomeMsg();
+    while (tpool.size() < 1)
+    {   
+        //Flesh out console message class
+        cmsg::loopMsgMod("Waiting for connections",'.',3);
+    }
+
+    //log loop will print critical server events, all other events will be serialized
+    int exitStatus = serverLog.logLoop();
+    if (exitStatus !=0)
+    {
+        std::cerr << "[Log] ERROR: Server exited unexpectedly with status code " << exitStatus << nl;
+    }
+    std::cout << "[Log] Server Log exited normally.\n";
+}
+
+void Server::clientThread(const SOCKET& socket)
 {
 
 }
+
+/*
+    Future:
+        Add functionality for creating user defined functions to handle HTTP requests
+*/

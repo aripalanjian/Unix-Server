@@ -1,4 +1,4 @@
-CFLAGS = -g -Wall #-std=c++11
+CFLAGS = -g -std=c++20 -Wall -Wextra -vmake 
 CC = g++
 
 all: server client

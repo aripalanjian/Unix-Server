@@ -11,3 +11,13 @@ client
 /messages
 /wait.dSYM
 wait
+.idea
+tests
+extern
+logs/*.csv
+assets/screencaps
+.DS_Store
+# Steps to untrack files that were previously tracked:
+# Add files or directories to .gitignore
+# to remove tracked files: git rm --cached <file>
+# to remove tracked directories: git rm -r --cached <file>
