@@ -144,8 +144,3 @@ void Server::clientThread(const SOCKET& socket)
 {
 
 }
-
-/*
-    Future:
-        Add functionality for creating user defined functions to handle HTTP requests
-*/
