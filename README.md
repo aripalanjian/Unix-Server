@@ -20,4 +20,4 @@ handling HTTPS methods.
     - Test coverage
     - Define client loop
     - Update to -std=c++20
-    - Research converting to Coroutines
+    - Research Coroutines
