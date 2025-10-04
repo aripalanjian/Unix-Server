@@ -13,7 +13,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-namespace toolsAPUSC{
+namespace logger
+{
 
 constexpr char nl = '\n';
 
@@ -208,12 +209,15 @@ public:
                 std::ios::out |   // output file stream
                 std::ios::app |   // can append to a existing file
                 std::ios::ate );  // set file cursor at the end
-        /*
-            TODO:
-                *Add a header row if file is new
-        */
+        
         if(ofs)
         {
+            if (ofs.tellp() == 0)
+            {
+                //New file, add header row
+                ofs << "EventCode,EventString,Description,Day,Month,Year\n";
+            }
+            //Serialize all new events
             size_t i = lastEventSerializedIndex;
             for (; i < lastEventIndex; i++)
             {

@@ -77,7 +77,7 @@ struct Response{
   }
 };
 
-using namespace toolsAPUSC;
+using namespace logger;
 class Server {
   //Default Values
   const std::string DEFAULT_PORT{"6993"};

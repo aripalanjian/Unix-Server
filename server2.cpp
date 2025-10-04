@@ -1,7 +1,6 @@
 #include "server.hpp"
 #include "messages/clitext.hpp"
 
-using toolsAPUSC::nl;
 
 std::string getOsName()
 {
