@@ -1,4 +1,4 @@
-# Unix Server
+# Web Server
 - Description: 
 - Contributor(s): Ari Palanjian
 - [GitHub](https://github.com/aripalanjian/Unix-Server)
